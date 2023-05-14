@@ -28,6 +28,8 @@ from tornado import httpclient
 import requests
 import zstandard
 
+from pprint import pprint
+
 if StrictVersion(seesaw.__version__) < StrictVersion('0.8.5'):
     raise Exception('This pipeline needs seesaw version 0.8.5 or higher.')
 
@@ -112,16 +114,26 @@ class PrepareDirectories(SimpleTask):
         self.warc_prefix = warc_prefix
 
     def process(self, item):
+        pprint(item)
         item_name = item['item_name']
+        print("item_name:")
+        pprint(item_name)
         item_name_hash = hashlib.sha1(item_name.encode('utf8')).hexdigest()
+        print("item_name_hash:")
+        pprint(item_name_hash)
         escaped_item_name = item_name_hash
+        print("escaped_item_name:")
+        pprint(escaped_item_name)
         dirname = '/'.join((item['data_dir'], escaped_item_name))
+        print("dirname:")
+        pprint(dirname)
 
         if os.path.isdir(dirname):
             shutil.rmtree(dirname)
 
         os.makedirs(dirname)
-
+        print("self:")
+        pprint(self)
         item['item_dir'] = dirname
         item['warc_file_base'] = '-'.join([
             self.warc_prefix,
@@ -137,8 +149,13 @@ class MoveFiles(SimpleTask):
         SimpleTask.__init__(self, 'MoveFiles')
 
     def process(self, item):
+        print("moving Files...")
+        print('%(item_dir)s/%(warc_file_base)s.warc.zst' % item,
+              '%(data_dir)s/%(warc_file_base)s.%(dict_project)s.%(dict_id)s.warc.zst' % item)
         os.rename('%(item_dir)s/%(warc_file_base)s.warc.zst' % item,
               '%(data_dir)s/%(warc_file_base)s.%(dict_project)s.%(dict_id)s.warc.zst' % item)
+        print('%(item_dir)s/%(warc_file_base)s_data.txt' % item,
+              '%(data_dir)s/%(warc_file_base)s_data.txt' % item)
         os.rename('%(item_dir)s/%(warc_file_base)s_data.txt' % item,
               '%(data_dir)s/%(warc_file_base)s_data.txt' % item)
 
